@@ -7,6 +7,7 @@ import (
 	"github.com/openchirp/framework/rest"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -14,10 +15,13 @@ const (
 )
 
 func main() {
-	var frameworkServer string
-	var authID string
-	var authToken string
 	var host rest.Host
+
+	viper.SetConfigName("occonfig")         // name of config file (without extension)
+	viper.AddConfigPath("/etc/oc/")         // path to look for the config file in
+	viper.AddConfigPath("$HOME/.config/oc") // call multiple times to add many search paths
+	viper.AddConfigPath("$HOME/.oc")        // call multiple times to add many search paths
+	viper.AddConfigPath(".")                // optionally look for config in the working directory
 
 	var cmdService = &cobra.Command{
 		Use:   "service",
@@ -103,15 +107,30 @@ name and description. Upon success, the service ID is printed.`,
 
 	var rootCmd = &cobra.Command{Use: "ocmgr", Version: version}
 
-	rootCmd.PersistentFlags().StringVarP(&frameworkServer, "framework-server", "s", "http://localhost", "Specifies the framework server")
-	rootCmd.PersistentFlags().StringVarP(&authID, "auth-id", "i", "", "The authentication ID to use with the framework server")
-	rootCmd.PersistentFlags().StringVarP(&authToken, "auth-token", "t", "", "The authentication token to use with the framework server")
+	rootCmd.PersistentFlags().StringP("framework-server", "s", "http://localhost", "Specifies the framework server")
+	rootCmd.PersistentFlags().StringP("auth-id", "i", "", "The authentication ID to use with the framework server")
+	rootCmd.PersistentFlags().StringP("auth-token", "t", "", "The authentication token to use with the framework server")
+	viper.BindPFlag("framework-server", rootCmd.PersistentFlags().Lookup("framework-server"))
+	viper.BindPFlag("auth-id", rootCmd.PersistentFlags().Lookup("auth-id"))
+	viper.BindPFlag("auth-token", rootCmd.PersistentFlags().Lookup("auth-token"))
+	viper.BindEnv("framework-server", "FRAMEWORK_SERVER")
+	viper.BindEnv("auth-id", "AUTH_ID")
+	viper.BindEnv("auth-token", "AUTH_TOKEN")
 
-	rootCmd.AddCommand(cmdService)
+	// Find and read the config file
+	if err := viper.ReadInConfig(); err != nil {
+		switch err.(type) {
+		case viper.ConfigFileNotFoundError:
+			// continue on
+		case viper.ConfigParseError:
+			// Handle errors reading the config file
+			panic(fmt.Errorf("Failed to parse config file: %v\n", err))
+		}
+	}
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		host = rest.NewHost(frameworkServer)
-		host.Login(authID, authToken)
+		host = rest.NewHost(viper.GetString("framework-server"))
+		host.Login(viper.GetString("auth-id"), viper.GetString("auth-token"))
 	}
 	rootCmd.Execute()
 }
