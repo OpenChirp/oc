@@ -82,6 +82,22 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
+	var cmdServiceTokenRegenerate = &cobra.Command{
+		Use:   "regenerate <service_id>",
+		Short: "Regenerate a security token for the service",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			serviceID := args[0]
+
+			token, err := host.ServiceTokenRegenerate(serviceID)
+			if err != nil {
+				fmt.Println("Failed to regenerate token:", err)
+				os.Exit(1)
+			}
+			fmt.Println(token)
+		},
+	}
+
 	var cmdServiceTokenDelete = &cobra.Command{
 		Use:   "delete <service_id>",
 		Short: "Delete the security token for the service",
@@ -97,15 +113,18 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
-	// service
+	var rootCmd = &cobra.Command{Use: "ocmgr", Version: version}
+
+	// oc
+	rootCmd.AddCommand(cmdService)
+	// oc service
 	cmdService.AddCommand(cmdServiceCreate)
 	cmdService.AddCommand(cmdServiceDelete)
-	// service token
+	// oc service token
 	cmdService.AddCommand(cmdServiceToken)
 	cmdServiceToken.AddCommand(cmdServiceTokenGenerate)
+	cmdServiceToken.AddCommand(cmdServiceTokenRegenerate)
 	cmdServiceToken.AddCommand(cmdServiceTokenDelete)
-
-	var rootCmd = &cobra.Command{Use: "ocmgr", Version: version}
 
 	rootCmd.PersistentFlags().StringP("framework-server", "s", "http://localhost", "Specifies the framework server")
 	rootCmd.PersistentFlags().StringP("auth-id", "i", "", "The authentication ID to use with the framework server")
