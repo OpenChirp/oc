@@ -39,7 +39,7 @@ name and description. Upon success, the service ID is printed.`,
 			description := args[1]
 			s, err := host.ServiceCreate(name, description, nil, nil)
 			if err != nil {
-				fmt.Println("Failed to create service:", err)
+				fmt.Fprintln(os.Stderr, "Failed to create service:", err)
 				os.Exit(1)
 			}
 			fmt.Println(s.ID)
@@ -55,7 +55,7 @@ name and description. Upon success, the service ID is printed.`,
 
 			err := host.ServiceDelete(serviceID)
 			if err != nil {
-				fmt.Println("Failed to delete service:", err)
+				fmt.Fprintln(os.Stderr, "Failed to delete service:", err)
 				os.Exit(1)
 			}
 		},
@@ -75,7 +75,7 @@ name and description. Upon success, the service ID is printed.`,
 
 			token, err := host.ServiceTokenGenerate(serviceID)
 			if err != nil {
-				fmt.Println("Failed to generate token:", err)
+				fmt.Fprintln(os.Stderr, "Failed to generate token:", err)
 				os.Exit(1)
 			}
 			fmt.Println(token)
@@ -91,7 +91,7 @@ name and description. Upon success, the service ID is printed.`,
 
 			token, err := host.ServiceTokenRegenerate(serviceID)
 			if err != nil {
-				fmt.Println("Failed to regenerate token:", err)
+				fmt.Fprintln(os.Stderr, "Failed to regenerate token:", err)
 				os.Exit(1)
 			}
 			fmt.Println(token)
@@ -107,7 +107,7 @@ name and description. Upon success, the service ID is printed.`,
 
 			err := host.ServiceTokenDelete(serviceID)
 			if err != nil {
-				fmt.Println("Failed to delete token:", err)
+				fmt.Fprintln(os.Stderr, "Failed to delete token:", err)
 				os.Exit(1)
 			}
 		},
@@ -143,7 +143,8 @@ name and description. Upon success, the service ID is printed.`,
 			// continue on
 		case viper.ConfigParseError:
 			// Handle errors reading the config file
-			panic(fmt.Errorf("Failed to parse config file: %v\n", err))
+			fmt.Fprintln(os.Stderr, "Failed to parse config file:", err)
+			os.Exit(1)
 		}
 	}
 
