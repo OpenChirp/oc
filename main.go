@@ -233,16 +233,63 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
+	var cmdDevice = &cobra.Command{
+		Use:   "device",
+		Short: "Manage a device",
+	}
+
+	var cmdDeviceMonitor = &cobra.Command{
+		Use:   "monitor <device_id>",
+		Short: "Monitor a device's pubsub traffic",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			deviceID := args[0]
+
+			device, err := host.RequestDeviceInfo(deviceID)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to fetch device information:", err)
+				os.Exit(1)
+			}
+
+			client, err := pubsub.NewMQTTClient(
+				viper.GetString("mqtt-server"),
+				viper.GetString("auth-id"),
+				viper.GetString("auth-token"),
+				pubsub.QoSExactlyOnce,
+				false,
+			)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to connect to MQTT server:", err)
+				os.Exit(1)
+			}
+			defer client.Disconnect()
+
+			deviceTopic := device.Pubsub.Topic + "/#"
+			fmt.Println("Subscribing to", deviceTopic)
+			client.Subscribe(deviceTopic, func(topic string, payload []byte) {
+				fmt.Println(topic, string(payload))
+			})
+
+			/* Wait on a signal */
+			signals := make(chan os.Signal, 1)
+			signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+			<-signals
+		},
+	}
+
 	var rootCmd = &cobra.Command{Use: "oc", Version: version}
 
 	// oc
 	rootCmd.AddCommand(cmdService)
+	rootCmd.AddCommand(cmdDevice)
 	rootCmd.AddCommand(cmdUser)
 	// oc service
 	cmdService.AddCommand(cmdServiceLs)
 	cmdService.AddCommand(cmdServiceCreate)
 	cmdService.AddCommand(cmdServiceRm)
 	cmdService.AddCommand(cmdServiceMonitor)
+	//oc device
+	cmdDevice.AddCommand(cmdDeviceMonitor)
 	// oc service token
 	cmdService.AddCommand(cmdServiceToken)
 	cmdServiceToken.AddCommand(cmdServiceTokenGenerate)
