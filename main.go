@@ -107,9 +107,9 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
-	var cmdServiceDelete = &cobra.Command{
-		Use:   "delete <service_id>",
-		Short: "Delete a new service",
+	var cmdServiceRm = &cobra.Command{
+		Use:   "rm <service_id>",
+		Short: "Remove a new service",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			serviceID := args[0]
@@ -159,9 +159,9 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
-	var cmdServiceTokenDelete = &cobra.Command{
-		Use:   "delete <service_id>",
-		Short: "Delete the security token for the service",
+	var cmdServiceTokenRm = &cobra.Command{
+		Use:   "rm <service_id>",
+		Short: "Remove the security token for the service",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			serviceID := args[0]
@@ -182,12 +182,12 @@ name and description. Upon success, the service ID is printed.`,
 	// oc service
 	cmdService.AddCommand(cmdServiceLs)
 	cmdService.AddCommand(cmdServiceCreate)
-	cmdService.AddCommand(cmdServiceDelete)
+	cmdService.AddCommand(cmdServiceRm)
 	// oc service token
 	cmdService.AddCommand(cmdServiceToken)
 	cmdServiceToken.AddCommand(cmdServiceTokenGenerate)
 	cmdServiceToken.AddCommand(cmdServiceTokenRegenerate)
-	cmdServiceToken.AddCommand(cmdServiceTokenDelete)
+	cmdServiceToken.AddCommand(cmdServiceTokenRm)
 	// oc user
 	cmdUser.AddCommand(cmdUserInfo)
 
