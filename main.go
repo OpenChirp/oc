@@ -277,12 +277,46 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
+	var cmdMonitor = &cobra.Command{
+		Use:   "monitor <topics...>",
+		Short: "Monitor any mqtt topic",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := pubsub.NewMQTTClient(
+				viper.GetString("mqtt-server"),
+				viper.GetString("auth-id"),
+				viper.GetString("auth-token"),
+				pubsub.QoSExactlyOnce,
+				false,
+			)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to connect to MQTT server:", err)
+				os.Exit(1)
+			}
+			defer client.Disconnect()
+
+			onMessage := func(topic string, payload []byte) {
+				fmt.Println(topic, string(payload))
+			}
+			for _, t := range args {
+				fmt.Println("Subscribing to", t)
+				client.Subscribe(t, onMessage)
+			}
+
+			/* Wait on a signal */
+			signals := make(chan os.Signal, 1)
+			signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+			<-signals
+		},
+	}
+
 	var rootCmd = &cobra.Command{Use: "oc", Version: version}
 
 	// oc
 	rootCmd.AddCommand(cmdService)
 	rootCmd.AddCommand(cmdDevice)
 	rootCmd.AddCommand(cmdUser)
+	rootCmd.AddCommand(cmdMonitor)
 	// oc service
 	cmdService.AddCommand(cmdServiceLs)
 	cmdService.AddCommand(cmdServiceCreate)
