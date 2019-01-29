@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"text/tabwriter"
 
 	"github.com/openchirp/framework/rest"
 
@@ -12,6 +13,10 @@ import (
 
 const (
 	version string = "1.0"
+)
+
+const (
+	columnPadding = 3
 )
 
 func main() {
@@ -57,6 +62,31 @@ func main() {
 	var cmdService = &cobra.Command{
 		Use:   "service",
 		Short: "Manage a service",
+	}
+
+	var cmdServiceLs = &cobra.Command{
+		Use:   "ls",
+		Short: "List all services",
+		Long:  `The ls command will print out all services with their respective IDs`,
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			services, err := host.ServiceList()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to fetch services:", err)
+				os.Exit(1)
+			}
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, columnPadding, ' ', 0)
+			fmt.Fprintln(w, "NAME\tDESCRIPTION\tID\tOWNER NAME\tOWNER EMAIL\t")
+			for _, s := range services {
+				fmt.Fprintf(w, "%s\t", s.Name)
+				fmt.Fprintf(w, "%s\t", s.Description)
+				fmt.Fprintf(w, "%s\t", s.ID)
+				fmt.Fprintf(w, "%s\t", s.Owner.Name)
+				fmt.Fprintf(w, "%s\t", s.Owner.Email)
+				fmt.Fprintf(w, "\n")
+			}
+			w.Flush()
+		},
 	}
 
 	var cmdServiceCreate = &cobra.Command{
@@ -150,6 +180,7 @@ name and description. Upon success, the service ID is printed.`,
 	rootCmd.AddCommand(cmdService)
 	rootCmd.AddCommand(cmdUser)
 	// oc service
+	cmdService.AddCommand(cmdServiceLs)
 	cmdService.AddCommand(cmdServiceCreate)
 	cmdService.AddCommand(cmdServiceDelete)
 	// oc service token
