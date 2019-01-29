@@ -23,6 +23,37 @@ func main() {
 	viper.AddConfigPath("$HOME/.oc")        // call multiple times to add many search paths
 	viper.AddConfigPath(".")                // optionally look for config in the working directory
 
+	var cmdUser = &cobra.Command{
+		Use:   "user",
+		Short: "Manage the user account",
+	}
+
+	var cmdUserInfo = &cobra.Command{
+		Use:   "info",
+		Short: "Fetch user info",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			user, err := host.RequestUserInfo()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to fetch user info:", err)
+				os.Exit(1)
+			}
+			fmt.Println("Name:", user.Name)
+			fmt.Println("Email:", user.Email)
+			fmt.Println("UserID:", user.UserID)
+			fmt.Print("Groups: ")
+			for _, g := range user.Groups {
+				var access = "execute"
+				if g.WriteAccess {
+					access = "write"
+				}
+				fmt.Printf("%s-%s ", g.Name, access)
+			}
+			fmt.Println()
+		},
+	}
+
 	var cmdService = &cobra.Command{
 		Use:   "service",
 		Short: "Manage a service",
@@ -117,6 +148,7 @@ name and description. Upon success, the service ID is printed.`,
 
 	// oc
 	rootCmd.AddCommand(cmdService)
+	rootCmd.AddCommand(cmdUser)
 	// oc service
 	cmdService.AddCommand(cmdServiceCreate)
 	cmdService.AddCommand(cmdServiceDelete)
@@ -125,6 +157,8 @@ name and description. Upon success, the service ID is printed.`,
 	cmdServiceToken.AddCommand(cmdServiceTokenGenerate)
 	cmdServiceToken.AddCommand(cmdServiceTokenRegenerate)
 	cmdServiceToken.AddCommand(cmdServiceTokenDelete)
+	// oc user
+	cmdUser.AddCommand(cmdUserInfo)
 
 	rootCmd.PersistentFlags().StringP("framework-server", "s", "http://localhost", "Specifies the framework server")
 	rootCmd.PersistentFlags().StringP("auth-id", "i", "", "The authentication ID to use with the framework server")
