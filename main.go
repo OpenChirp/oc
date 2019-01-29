@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"text/tabwriter"
+
+	"github.com/openchirp/framework/pubsub"
 
 	"github.com/openchirp/framework/rest"
 
@@ -122,6 +126,45 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
+	var cmdServiceMonitor = &cobra.Command{
+		Use:   "monitor <service_id>",
+		Short: "Monitor a service's pubsub traffic",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			serviceID := args[0]
+
+			service, err := host.ServiceGet(serviceID)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to fetch service information:", err)
+				os.Exit(1)
+			}
+
+			client, err := pubsub.NewMQTTClient(
+				viper.GetString("mqtt-server"),
+				viper.GetString("auth-id"),
+				viper.GetString("auth-token"),
+				pubsub.QoSExactlyOnce,
+				false,
+			)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to connect to MQTT server:", err)
+				os.Exit(1)
+			}
+			defer client.Disconnect()
+
+			serviceTopic := service.Pubsub.Topic + "/#"
+			fmt.Println("Subscribing to", serviceTopic)
+			client.Subscribe(serviceTopic, func(topic string, payload []byte) {
+				fmt.Println(topic, string(payload))
+			})
+
+			/* Wait on a signal */
+			signals := make(chan os.Signal, 1)
+			signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+			<-signals
+		},
+	}
+
 	var cmdServiceToken = &cobra.Command{
 		Use:   "token",
 		Short: "Manage the service auth token",
@@ -199,6 +242,7 @@ name and description. Upon success, the service ID is printed.`,
 	cmdService.AddCommand(cmdServiceLs)
 	cmdService.AddCommand(cmdServiceCreate)
 	cmdService.AddCommand(cmdServiceRm)
+	cmdService.AddCommand(cmdServiceMonitor)
 	// oc service token
 	cmdService.AddCommand(cmdServiceToken)
 	cmdServiceToken.AddCommand(cmdServiceTokenGenerate)
