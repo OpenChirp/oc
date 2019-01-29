@@ -113,7 +113,7 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
-	var rootCmd = &cobra.Command{Use: "ocmgr", Version: version}
+	var rootCmd = &cobra.Command{Use: "oc", Version: version}
 
 	// oc
 	rootCmd.AddCommand(cmdService)
