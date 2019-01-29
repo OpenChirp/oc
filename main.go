@@ -139,9 +139,17 @@ name and description. Upon success, the service ID is printed.`,
 				fmt.Fprintln(os.Stderr, "Failed to generate token:", err)
 				os.Exit(1)
 			}
-			fmt.Println(token)
+			if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
+				fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
+				fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
+				fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
+				// missing MQTT server
+			} else {
+				fmt.Println(token)
+			}
 		},
 	}
+	cmdServiceTokenGenerate.Flags().Bool("env", false, "Print out all service environment variables to setup a service")
 
 	var cmdServiceTokenRegenerate = &cobra.Command{
 		Use:   "regenerate <service_id>",
@@ -155,9 +163,17 @@ name and description. Upon success, the service ID is printed.`,
 				fmt.Fprintln(os.Stderr, "Failed to regenerate token:", err)
 				os.Exit(1)
 			}
-			fmt.Println(token)
+			if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
+				fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
+				fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
+				fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
+				// missing MQTT server
+			} else {
+				fmt.Println(token)
+			}
 		},
 	}
+	cmdServiceTokenRegenerate.Flags().Bool("env", false, "Print out all service environment variables to setup a service")
 
 	var cmdServiceTokenRm = &cobra.Command{
 		Use:   "rm <service_id>",
