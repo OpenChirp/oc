@@ -141,9 +141,9 @@ name and description. Upon success, the service ID is printed.`,
 			}
 			if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
 				fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
+				fmt.Printf("MQTT_SERVER=\"%s\"\n", viper.GetString("mqtt-server"))
 				fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
 				fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
-				// missing MQTT server
 			} else {
 				fmt.Println(token)
 			}
@@ -165,9 +165,9 @@ name and description. Upon success, the service ID is printed.`,
 			}
 			if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
 				fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
+				fmt.Printf("MQTT_SERVER=\"%s\"\n", viper.GetString("mqtt-server"))
 				fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
 				fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
-				// missing MQTT server
 			} else {
 				fmt.Println(token)
 			}
@@ -208,9 +208,11 @@ name and description. Upon success, the service ID is printed.`,
 	cmdUser.AddCommand(cmdUserInfo)
 
 	rootCmd.PersistentFlags().StringP("framework-server", "s", "http://localhost", "Specifies the framework server")
+	rootCmd.PersistentFlags().StringP("mqtt-server", "m", "tcp://localhost:1883", "Specifies the mqtt server")
 	rootCmd.PersistentFlags().StringP("auth-id", "i", "", "The authentication ID to use with the framework server")
 	rootCmd.PersistentFlags().StringP("auth-token", "t", "", "The authentication token to use with the framework server")
 	viper.BindPFlag("framework-server", rootCmd.PersistentFlags().Lookup("framework-server"))
+	viper.BindPFlag("mqtt-server", rootCmd.PersistentFlags().Lookup("mqtt-server"))
 	viper.BindPFlag("auth-id", rootCmd.PersistentFlags().Lookup("auth-id"))
 	viper.BindPFlag("auth-token", rootCmd.PersistentFlags().Lookup("auth-token"))
 	viper.BindEnv("framework-server", "FRAMEWORK_SERVER")
