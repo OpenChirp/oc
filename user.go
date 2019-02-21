@@ -30,7 +30,7 @@ func userInfo(cmd *cobra.Command, args []string) {
 }
 
 func userLs(cmd *cobra.Command, args []string) {
-	users, err := host.AllUsers()
+	users, err := host.UserAll()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to fetch users:", err)
 		os.Exit(1)
