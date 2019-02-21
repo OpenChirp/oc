@@ -23,9 +23,9 @@ const (
 	columnPadding = 3
 )
 
-func main() {
-	var host rest.Host
+var host rest.Host
 
+func main() {
 	viper.SetConfigName("occonfig")         // name of config file (without extension)
 	viper.AddConfigPath("/etc/oc/")         // path to look for the config file in
 	viper.AddConfigPath("$HOME/.config/oc") // call multiple times to add many search paths
@@ -73,24 +73,7 @@ func main() {
 		Short: "List all services",
 		Long:  `The ls command will print out all services with their respective IDs`,
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			services, err := host.ServiceList()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to fetch services:", err)
-				os.Exit(1)
-			}
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, columnPadding, ' ', 0)
-			fmt.Fprintln(w, "NAME\tDESCRIPTION\tID\tOWNER NAME\tOWNER EMAIL\t")
-			for _, s := range services {
-				fmt.Fprintf(w, "%s\t", s.Name)
-				fmt.Fprintf(w, "%s\t", s.Description)
-				fmt.Fprintf(w, "%s\t", s.ID)
-				fmt.Fprintf(w, "%s\t", s.Owner.Name)
-				fmt.Fprintf(w, "%s\t", s.Owner.Email)
-				fmt.Fprintf(w, "\n")
-			}
-			w.Flush()
-		},
+		Run:   serviceLs,
 	}
 
 	var cmdServiceCreate = &cobra.Command{
@@ -99,70 +82,21 @@ func main() {
 		Long: `The create command will create a new service with the given
 name and description. Upon success, the service ID is printed.`,
 		Args: cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			description := args[1]
-			s, err := host.ServiceCreate(name, description, nil, nil)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to create service:", err)
-				os.Exit(1)
-			}
-			fmt.Println(s.ID)
-		},
+		Run:  serviceCreate,
 	}
 
 	var cmdServiceRm = &cobra.Command{
 		Use:   "rm <service_id>",
 		Short: "Remove a new service",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceID := args[0]
-
-			err := host.ServiceDelete(serviceID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to delete service:", err)
-				os.Exit(1)
-			}
-		},
+		Run:   serviceRm,
 	}
 
 	var cmdServiceMonitor = &cobra.Command{
 		Use:   "monitor <service_id>",
 		Short: "Monitor a service's pubsub traffic",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceID := args[0]
-
-			service, err := host.ServiceGet(serviceID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to fetch service information:", err)
-				os.Exit(1)
-			}
-
-			client, err := pubsub.NewMQTTClient(
-				viper.GetString("mqtt-server"),
-				viper.GetString("auth-id"),
-				viper.GetString("auth-token"),
-				pubsub.QoSExactlyOnce,
-				false,
-			)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to connect to MQTT server:", err)
-				os.Exit(1)
-			}
-			defer client.Disconnect()
-
-			serviceTopic := service.Pubsub.Topic + "/#"
-			fmt.Println("Subscribing to", serviceTopic)
-			client.Subscribe(serviceTopic, func(topic string, payload []byte) {
-				fmt.Println(topic, string(payload))
-			})
-
-			/* Wait on a signal */
-			signals := make(chan os.Signal, 1)
-			signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
-			<-signals
-		},
+		Run:   serviceMonitor,
 	}
 
 	var cmdServiceToken = &cobra.Command{
@@ -174,23 +108,7 @@ name and description. Upon success, the service ID is printed.`,
 		Use:   "generate <service_id>",
 		Short: "Generate a security token for the service",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceID := args[0]
-
-			token, err := host.ServiceTokenGenerate(serviceID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to generate token:", err)
-				os.Exit(1)
-			}
-			if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
-				fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
-				fmt.Printf("MQTT_SERVER=\"%s\"\n", viper.GetString("mqtt-server"))
-				fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
-				fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
-			} else {
-				fmt.Println(token)
-			}
-		},
+		Run:   serviceTokenGenerate,
 	}
 	cmdServiceTokenGenerate.Flags().Bool("env", false, "Print out all service environment variables to setup a service")
 
@@ -198,23 +116,7 @@ name and description. Upon success, the service ID is printed.`,
 		Use:   "regenerate <service_id>",
 		Short: "Regenerate a security token for the service",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceID := args[0]
-
-			token, err := host.ServiceTokenRegenerate(serviceID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to regenerate token:", err)
-				os.Exit(1)
-			}
-			if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
-				fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
-				fmt.Printf("MQTT_SERVER=\"%s\"\n", viper.GetString("mqtt-server"))
-				fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
-				fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
-			} else {
-				fmt.Println(token)
-			}
-		},
+		Run:   serviceTokenRegenerate,
 	}
 	cmdServiceTokenRegenerate.Flags().Bool("env", false, "Print out all service environment variables to setup a service")
 
@@ -222,15 +124,7 @@ name and description. Upon success, the service ID is printed.`,
 		Use:   "rm <service_id>",
 		Short: "Remove the security token for the service",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceID := args[0]
-
-			err := host.ServiceTokenDelete(serviceID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to delete token:", err)
-				os.Exit(1)
-			}
-		},
+		Run:   serviceTokenRm,
 	}
 
 	var cmdDevice = &cobra.Command{
