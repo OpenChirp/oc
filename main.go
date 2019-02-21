@@ -64,6 +64,25 @@ func main() {
 	}
 	cmdUserCreate.Flags().Bool("occonfig", false, "Print out an oc config for the new user")
 
+	var cmdGroup = &cobra.Command{
+		Use:   "group",
+		Short: "Manage groups",
+	}
+
+	var cmdGroupCreate = &cobra.Command{
+		Use:   "create <name>",
+		Short: "Create new group",
+		Args:  cobra.ExactArgs(1),
+		Run:   groupCreate,
+	}
+
+	var cmdGroupLs = &cobra.Command{
+		Use:   "ls",
+		Short: "List all groups",
+		Args:  cobra.NoArgs,
+		Run:   groupLs,
+	}
+
 	var cmdService = &cobra.Command{
 		Use:   "service",
 		Short: "Manage a service",
@@ -186,6 +205,7 @@ name and description. Upon success, the service ID is printed.`,
 	rootCmd.AddCommand(cmdService)
 	rootCmd.AddCommand(cmdDevice)
 	rootCmd.AddCommand(cmdUser)
+	rootCmd.AddCommand(cmdGroup)
 	rootCmd.AddCommand(cmdMonitor)
 	// oc service
 	cmdService.AddCommand(cmdServiceLs)
@@ -204,6 +224,9 @@ name and description. Upon success, the service ID is printed.`,
 	cmdUser.AddCommand(cmdUserInfo)
 	cmdUser.AddCommand(cmdUserCreate)
 	cmdUser.AddCommand(cmdUserLs)
+	// oc group
+	cmdGroup.AddCommand(cmdGroupCreate)
+	cmdGroup.AddCommand(cmdGroupLs)
 
 	rootCmd.PersistentFlags().StringP("framework-server", "s", "http://localhost", "Specifies the framework server")
 	rootCmd.PersistentFlags().StringP("mqtt-server", "m", "tcp://localhost:1883", "Specifies the mqtt server")
