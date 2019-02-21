@@ -63,6 +63,6 @@ func userCreate(cmd *cobra.Command, args []string) {
 		fmt.Printf("framework-server = \"%s\"\n", frameworkHost)
 		fmt.Printf("mqtt-server = \"%s\"\n", mqttServer)
 		fmt.Printf("auth-id = \"%s\"\n", email)
-		fmt.Printf("auth-token = \"%s\"\n", "X")
+		fmt.Printf("auth-token = \"%s\"\n", "MUST_GENERATE")
 	}
 }
