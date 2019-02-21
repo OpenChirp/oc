@@ -227,6 +227,7 @@ name and description. Upon success, the service ID is printed.`,
 	rootCmd.PersistentFlags().StringP("mqtt-server", "m", "tcp://localhost:1883", "Specifies the mqtt server")
 	rootCmd.PersistentFlags().StringP("auth-id", "i", "", "The authentication ID to use with the framework server")
 	rootCmd.PersistentFlags().StringP("auth-token", "t", "", "The authentication token to use with the framework server")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose logging")
 	viper.BindPFlag("framework-server", rootCmd.PersistentFlags().Lookup("framework-server"))
 	viper.BindPFlag("mqtt-server", rootCmd.PersistentFlags().Lookup("mqtt-server"))
 	viper.BindPFlag("auth-id", rootCmd.PersistentFlags().Lookup("auth-id"))
@@ -248,6 +249,11 @@ name and description. Upon success, the service ID is printed.`,
 	}
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if v, _ := cmd.Flags().GetBool("verbose"); v {
+			fmt.Fprintln(os.Stderr, "Framework Server:", viper.GetString("framework-server"))
+			fmt.Fprintln(os.Stderr, "MQTT Server:", viper.GetString("mqtt-server"))
+			fmt.Fprintln(os.Stderr, "Auth ID:", viper.GetString("auth-id"))
+		}
 		host = rest.NewHost(viper.GetString("framework-server"))
 		host.Login(viper.GetString("auth-id"), viper.GetString("auth-token"))
 	}
