@@ -26,10 +26,10 @@ var host rest.Host
 
 func main() {
 	viper.SetConfigName("occonfig")         // name of config file (without extension)
+	viper.AddConfigPath(".")                // optionally look for config in the working directory
 	viper.AddConfigPath("/etc/oc/")         // path to look for the config file in
 	viper.AddConfigPath("$HOME/.config/oc") // call multiple times to add many search paths
 	viper.AddConfigPath("$HOME/.oc")        // call multiple times to add many search paths
-	viper.AddConfigPath(".")                // optionally look for config in the working directory
 
 	var cmdUser = &cobra.Command{
 		Use:   "user",
