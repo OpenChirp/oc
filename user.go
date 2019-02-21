@@ -59,4 +59,10 @@ func userCreate(cmd *cobra.Command, args []string) {
 		fmt.Fprintln(os.Stderr, "Failed to create user:", err)
 		os.Exit(1)
 	}
+	if occonfigTrue, _ := cmd.Flags().GetBool("occonfig"); occonfigTrue {
+		fmt.Printf("framework-server = \"%s\"\n", frameworkHost)
+		fmt.Printf("mqtt-server = \"%s\"\n", mqttServer)
+		fmt.Printf("auth-id = \"%s\"\n", email)
+		fmt.Printf("auth-token = \"%s\"\n", "X")
+	}
 }
