@@ -140,6 +140,13 @@ name and description. Upon success, the service ID is printed.`,
 		Run:   deviceMonitor,
 	}
 
+	var cmdDeviceLs = &cobra.Command{
+		Use:   "ls",
+		Short: "List all devices",
+		Args:  cobra.NoArgs,
+		Run:   deviceLs,
+	}
+
 	var cmdMonitor = &cobra.Command{
 		Use:   "monitor <topics...>",
 		Short: "Monitor any mqtt topic",
@@ -187,6 +194,7 @@ name and description. Upon success, the service ID is printed.`,
 	cmdService.AddCommand(cmdServiceMonitor)
 	//oc device
 	cmdDevice.AddCommand(cmdDeviceMonitor)
+	cmdDevice.AddCommand(cmdDeviceLs)
 	// oc service token
 	cmdService.AddCommand(cmdServiceToken)
 	cmdServiceToken.AddCommand(cmdServiceTokenGenerate)
