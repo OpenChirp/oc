@@ -22,6 +22,12 @@ const (
 	columnPadding = 3
 )
 
+var (
+	frameworkHost string
+	mqttServer    string
+	authID        string
+	authToken     string
+)
 var host rest.Host
 
 func main() {
@@ -172,9 +178,9 @@ name and description. Upon success, the service ID is printed.`,
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := pubsub.NewMQTTClient(
-				viper.GetString("mqtt-server"),
-				viper.GetString("auth-id"),
-				viper.GetString("auth-token"),
+				mqttServer,
+				authID,
+				authToken,
 				pubsub.QoSExactlyOnce,
 				false,
 			)
@@ -249,13 +255,18 @@ name and description. Upon success, the service ID is printed.`,
 	}
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		frameworkHost = viper.GetString("framework-server")
+		mqttServer = viper.GetString("mqtt-server")
+		authID = viper.GetString("auth-id")
+		authToken = viper.GetString("auth-token")
+
 		if v, _ := cmd.Flags().GetBool("verbose"); v {
-			fmt.Fprintln(os.Stderr, "Framework Server:", viper.GetString("framework-server"))
-			fmt.Fprintln(os.Stderr, "MQTT Server:", viper.GetString("mqtt-server"))
-			fmt.Fprintln(os.Stderr, "Auth ID:", viper.GetString("auth-id"))
+			fmt.Fprintln(os.Stderr, "Framework Server:", frameworkHost)
+			fmt.Fprintln(os.Stderr, "MQTT Server:", mqttServer)
+			fmt.Fprintln(os.Stderr, "Auth ID:", authID)
 		}
-		host = rest.NewHost(viper.GetString("framework-server"))
-		host.Login(viper.GetString("auth-id"), viper.GetString("auth-token"))
+		host = rest.NewHost(frameworkHost)
+		host.Login(authID, authToken)
 	}
 	rootCmd.Execute()
 }

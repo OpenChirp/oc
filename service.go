@@ -9,7 +9,6 @@ import (
 
 	"github.com/openchirp/framework/pubsub"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func serviceLs(cmd *cobra.Command, args []string) {
@@ -62,9 +61,9 @@ func serviceMonitor(cmd *cobra.Command, args []string) {
 	}
 
 	client, err := pubsub.NewMQTTClient(
-		viper.GetString("mqtt-server"),
-		viper.GetString("auth-id"),
-		viper.GetString("auth-token"),
+		mqttServer,
+		authID,
+		authToken,
 		pubsub.QoSExactlyOnce,
 		false,
 	)
@@ -95,8 +94,8 @@ func serviceTokenGenerate(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
-		fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
-		fmt.Printf("MQTT_SERVER=\"%s\"\n", viper.GetString("mqtt-server"))
+		fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", frameworkHost)
+		fmt.Printf("MQTT_SERVER=\"%s\"\n", mqttServer)
 		fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
 		fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
 	} else {
@@ -113,8 +112,8 @@ func serviceTokenRegenerate(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	if envTrue, _ := cmd.Flags().GetBool("env"); envTrue {
-		fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", viper.GetString("framework-server"))
-		fmt.Printf("MQTT_SERVER=\"%s\"\n", viper.GetString("mqtt-server"))
+		fmt.Printf("FRAMEWORK_SERVER=\"%s\"\n", frameworkHost)
+		fmt.Printf("MQTT_SERVER=\"%s\"\n", mqttServer)
 		fmt.Printf("SERVICE_ID=\"%s\"\n", serviceID)
 		fmt.Printf("SERVICE_TOKEN=\"%s\"\n", token)
 	} else {
