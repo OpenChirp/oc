@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"text/tabwriter"
 
 	"github.com/openchirp/framework/pubsub"
 
@@ -41,27 +40,23 @@ func main() {
 		Use:   "info",
 		Short: "Fetch user info",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-
-			user, err := host.RequestUserInfo()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to fetch user info:", err)
-				os.Exit(1)
-			}
-			fmt.Println("Name:", user.Name)
-			fmt.Println("Email:", user.Email)
-			fmt.Println("UserID:", user.UserID)
-			fmt.Print("Groups: ")
-			for _, g := range user.Groups {
-				var access = "execute"
-				if g.WriteAccess {
-					access = "write"
-				}
-				fmt.Printf("%s-%s ", g.Name, access)
-			}
-			fmt.Println()
-		},
+		Run:   userInfo,
 	}
+
+	var cmdUserLs = &cobra.Command{
+		Use:   "ls",
+		Short: "Fetch the list of all user",
+		Args:  cobra.NoArgs,
+		Run:   userLs,
+	}
+
+	var cmdUserCreate = &cobra.Command{
+		Use:   "create <email> <password> [name]",
+		Short: "Create new user",
+		Args:  cobra.RangeArgs(2, 3),
+		Run:   userCreate,
+	}
+	cmdUserCreate.Flags().Bool("occonfig", false, "Print out an oc config for the new user")
 
 	var cmdService = &cobra.Command{
 		Use:   "service",
@@ -225,6 +220,8 @@ name and description. Upon success, the service ID is printed.`,
 	cmdServiceToken.AddCommand(cmdServiceTokenRm)
 	// oc user
 	cmdUser.AddCommand(cmdUserInfo)
+	cmdUser.AddCommand(cmdUserCreate)
+	cmdUser.AddCommand(cmdUserLs)
 
 	rootCmd.PersistentFlags().StringP("framework-server", "s", "http://localhost", "Specifies the framework server")
 	rootCmd.PersistentFlags().StringP("mqtt-server", "m", "tcp://localhost:1883", "Specifies the mqtt server")
