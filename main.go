@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/openchirp/framework/rest"
 
@@ -190,11 +191,25 @@ name and description. Upon success, the service ID is printed.`,
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			exitstatus, _ := cmd.Flags().GetBool("exitstatus")
+			waitDuration, _ := cmd.Flags().GetDuration("wait")
 
-			status, err := host.HealthCheck()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Failed to fetch health status:", err)
-				os.Exit(1)
+			var status rest.HealthStatus
+
+			if waitDuration != 0 {
+				for {
+					status, _ = host.HealthCheck()
+					if status == rest.HealthStatusOK {
+						break
+					}
+					time.Sleep(waitDuration)
+				}
+			} else {
+				var err error
+				status, err = host.HealthCheck()
+				if err != nil {
+					fmt.Fprintln(os.Stderr, "Failed to fetch health status:", err)
+					os.Exit(1)
+				}
 			}
 
 			fmt.Println(status)
@@ -204,6 +219,7 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 	cmdCheck.Flags().BoolP("exitstatus", "e", false, "Set the exit status to indicate the server health")
+	cmdCheck.Flags().DurationP("wait", "w", 0, "Wait until the framework server reports an ok status. The parameter is the time between retries.")
 
 	var cmdConfig = &cobra.Command{
 		Use:   "config",
