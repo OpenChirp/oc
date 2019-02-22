@@ -1,0 +1,6 @@
+# This example config for the oc utility.
+# This file should be renamed to occonfig.toml
+framework-server = "http://localhost:7000"
+mqtt-server = "tcp://localhost:1883"
+auth-id = ""
+auth-token = ""
