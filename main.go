@@ -184,6 +184,27 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
+	var cmdCheck = &cobra.Command{
+		Use:   "check",
+		Short: "Returns the self-reported health of the framework server",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			exitstatus, _ := cmd.Flags().GetBool("exitstatus")
+
+			status, err := host.HealthCheck()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Failed to fetch health status:", err)
+				os.Exit(1)
+			}
+
+			fmt.Println(status)
+			if exitstatus && status != rest.HealthStatusOK {
+				os.Exit(2)
+			}
+		},
+	}
+	cmdCheck.Flags().BoolP("exitstatus", "e", false, "Set the exit status to indicate the server health")
+
 	var cmdConfig = &cobra.Command{
 		Use:   "config",
 		Short: "Print out current config settings in use",
@@ -203,6 +224,7 @@ name and description. Upon success, the service ID is printed.`,
 	rootCmd.AddCommand(cmdUser)
 	rootCmd.AddCommand(cmdGroup)
 	rootCmd.AddCommand(cmdMonitor)
+	rootCmd.AddCommand(cmdCheck)
 	rootCmd.AddCommand(cmdConfig)
 	// oc service
 	cmdService.AddCommand(cmdServiceLs)
