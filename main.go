@@ -71,7 +71,7 @@ func main() {
 		Args:  cobra.RangeArgs(2, 3),
 		Run:   userCreate,
 	}
-	cmdUserCreate.Flags().Bool("occonfig", false, "Print out an oc config for the new user")
+	cmdUserCreate.Flags().BoolP("occonfig", "c", false, "Print out an oc config for the new user")
 
 	var cmdGroup = &cobra.Command{
 		Use:   "group",
