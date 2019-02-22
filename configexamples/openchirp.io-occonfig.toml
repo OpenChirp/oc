@@ -3,4 +3,4 @@
 framework-server = "https://api.openchirp.io"
 mqtt-server = "tls://mqtt.openchirp.io:8883"
 auth-id = "<USER_ID_FROM_USER_INFO>"
-auth-token = "USER_TOKEN_FROM_USER_INFO"
+auth-token = "<USER_TOKEN_FROM_USER_INFO>"
