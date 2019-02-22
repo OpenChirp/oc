@@ -40,11 +40,11 @@ func printConfig(tomlFormat bool) {
 }
 
 func main() {
-	viper.SetConfigName("occonfig")         // name of config file (without extension)
-	viper.AddConfigPath(".")                // optionally look for config in the working directory
-	viper.AddConfigPath("/etc/oc/")         // path to look for the config file in
-	viper.AddConfigPath("$HOME/.config/oc") // call multiple times to add many search paths
-	viper.AddConfigPath("$HOME/.oc")        // call multiple times to add many search paths
+	viper.SetConfigName("occonfig") // without extension because it can be any supported type
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME/.config/oc")
+	viper.AddConfigPath("$HOME/.oc")
+	viper.AddConfigPath("/etc/")
 
 	var cmdUser = &cobra.Command{
 		Use:   "user",
