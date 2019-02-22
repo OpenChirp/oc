@@ -26,6 +26,19 @@ var (
 )
 var host rest.Host
 
+func printConfig(tomlFormat bool) {
+	if tomlFormat {
+		fmt.Printf("framework-server = \"%s\"\n", frameworkHost)
+		fmt.Printf("mqtt-server = \"%s\"\n", mqttServer)
+		fmt.Printf("auth-id = \"%s\"\n", authID)
+		fmt.Printf("auth-token = \"%s\"\n", authToken)
+	} else {
+		fmt.Fprintln(os.Stderr, "Framework Server:", frameworkHost)
+		fmt.Fprintln(os.Stderr, "MQTT Server:", mqttServer)
+		fmt.Fprintln(os.Stderr, "Auth ID:", authID)
+	}
+}
+
 func main() {
 	viper.SetConfigName("occonfig")         // name of config file (without extension)
 	viper.AddConfigPath(".")                // optionally look for config in the working directory
@@ -171,6 +184,17 @@ name and description. Upon success, the service ID is printed.`,
 		},
 	}
 
+	var cmdConfig = &cobra.Command{
+		Use:   "config",
+		Short: "Print out current config settings in use",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			tomlFormat, _ := cmd.Flags().GetBool("occonfig")
+			printConfig(tomlFormat)
+		},
+	}
+	cmdConfig.Flags().BoolP("occonfig", "c", false, "Print out an oc config in toml format")
+
 	var rootCmd = &cobra.Command{Use: "oc", Version: version}
 
 	// oc
@@ -179,6 +203,7 @@ name and description. Upon success, the service ID is printed.`,
 	rootCmd.AddCommand(cmdUser)
 	rootCmd.AddCommand(cmdGroup)
 	rootCmd.AddCommand(cmdMonitor)
+	rootCmd.AddCommand(cmdConfig)
 	// oc service
 	cmdService.AddCommand(cmdServiceLs)
 	cmdService.AddCommand(cmdServiceCreate)
@@ -232,9 +257,7 @@ name and description. Upon success, the service ID is printed.`,
 		authToken = viper.GetString("auth-token")
 
 		if v, _ := cmd.Flags().GetBool("verbose"); v {
-			fmt.Fprintln(os.Stderr, "Framework Server:", frameworkHost)
-			fmt.Fprintln(os.Stderr, "MQTT Server:", mqttServer)
-			fmt.Fprintln(os.Stderr, "Auth ID:", authID)
+			printConfig(false)
 		}
 		host = rest.NewHost(frameworkHost)
 		host.Login(authID, authToken)
